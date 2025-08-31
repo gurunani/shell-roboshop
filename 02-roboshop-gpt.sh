@@ -5,7 +5,7 @@ SG_ID="sg-00dc811cc4361c4b9" # replace with your SG ID
 INSTANCES=("mongodb" "redis" "mysql" "rabbitmq" "catalogue" "user" "cart" "shipping" "payment" "dispatch" "frontend")
 ZONE_ID="Z032558618100M4EJX8X4" # replace with your ZONE ID
 DOMAIN_NAME="gurulabs.xyz" # replace with your domain
-KEY_NAME="your-keypair-name" # replace with your EC2 key pair name if SSH is needed
+KEY_NAME="redchip" # replace with your EC2 key pair name if SSH is needed
 
 for instance in "${INSTANCES[@]}"
 do
