@@ -100,7 +100,7 @@ VALIDATE $? "Installing NodeJS dependencies"
 #------------------------#
 # Setup Systemd Service
 #------------------------#
-cp $SCRIPT_DIR/catalogue.conf /etc/systemd/system/catalogue.service
+cp $SCRIPT_DIR/catalogue.service /etc/systemd/system/catalogue.service
 VALIDATE $? "Copying catalogue.service"
 
 systemctl daemon-reload &>>$LOG_FILE
