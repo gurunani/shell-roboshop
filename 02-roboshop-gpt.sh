@@ -54,7 +54,7 @@ do
                 \"ResourceRecordSet\": {
                     \"Name\": \"$RECORD_NAME\",
                     \"Type\": \"A\",
-                    \"TTL\": 60,
+                    \"TTL\": 1,
                     \"ResourceRecords\": [{
                         \"Value\": \"$IP\"
                     }]
