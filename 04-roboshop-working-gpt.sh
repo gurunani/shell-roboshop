@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# mention instance id after sudo sh 04-roboshop-working-gpt.sh  [mongodb" "redis" "mysql" "rabbitmq" "catalogue" "user" "cart" "shipping" "payment" "dispatch" "frontend]
+
 AMI_ID="ami-09c813fb71547fc4f"
 SG_ID="sg-00dc811cc4361c4b9" 
 INSTANCES=("mongodb" "redis" "mysql" "rabbitmq" "catalogue" "user" "cart" "shipping" "payment" "dispatch" "frontend")
