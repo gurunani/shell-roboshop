@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# It is copied from gpt
+
 START_TIME=$(date +%s)
 USERID=$(id -u)
 R="\e[31m"
@@ -14,11 +16,11 @@ SCRIPT_DIR=$PWD
 mkdir -p $LOGS_FOLDER
 echo "Script started executing at: $(date)" | tee -a $LOG_FILE
 
-# check the user has root priveleges or not
+# check the user has root privileges or not
 if [ $USERID -ne 0 ]
 then
     echo -e "$R ERROR:: Please run this script with root access $N" | tee -a $LOG_FILE
-    exit 1 #give other than 0 upto 127
+    exit 1
 else
     echo "You are running with root access" | tee -a $LOG_FILE
 fi
@@ -26,7 +28,7 @@ fi
 echo "Please enter root password to setup"
 read -s MYSQL_ROOT_PASSWORD
 
-# validate functions takes input as exit status, what command they tried to install
+# validate function
 VALIDATE(){
     if [ $1 -eq 0 ]
     then
@@ -46,10 +48,11 @@ VALIDATE $? "Enabling MySQL"
 systemctl start mysqld   &>>$LOG_FILE
 VALIDATE $? "Starting MySQL"
 
-mysql_secure_installation --set-root-pass $MYSQL_ROOT_PASSWORD &>>$LOG_FILE
+# set root password (standard method)
+mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';" &>>$LOG_FILE
 VALIDATE $? "Setting MySQL root password"
 
 END_TIME=$(date +%s)
 TOTAL_TIME=$(( $END_TIME - $START_TIME ))
 
-echo -e "Script exection completed successfully, $Y time taken: $TOTAL_TIME seconds $N" | tee -a $LOG_FILE
+echo -e "Script execution completed successfully, $Y time taken: $TOTAL_TIME seconds $N" | tee -a $LOG_FILE

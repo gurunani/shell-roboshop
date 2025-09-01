@@ -1,58 +1,61 @@
 #!/bin/bash
 
-START_TIME=$(date +%s)
+# Variables
 USERID=$(id -u)
+LOG_FILE=/var/log/rabbitmq-setup.log
+SCRIPT_DIR=$PWD
 R="\e[31m"
 G="\e[32m"
-Y="\e[33m"
 N="\e[0m"
-LOGS_FOLDER="/var/log/roboshop-logs"
-SCRIPT_NAME=$(echo $0 | cut -d "." -f1)
-LOG_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
-SCRIPT_DIR=$PWD
 
-mkdir -p $LOGS_FOLDER
-echo "Script started executing at: $(date)" | tee -a $LOG_FILE
-
-# check the user has root priveleges or not
-if [ $USERID -ne 0 ]
-then
-    echo -e "$R ERROR:: Please run this script with root access $N" | tee -a $LOG_FILE
-    exit 1 #give other than 0 upto 127
-else
-    echo "You are running with root access" | tee -a $LOG_FILE
-fi
-
-echo "Please enter rabbitmq password to setup"
-read -s RABBITMQ_PASSWD
-
-# validate functions takes input as exit status, what command they tried to install
-VALIDATE(){
-    if [ $1 -eq 0 ]
-    then
-        echo -e "$2 is ... $G SUCCESS $N" | tee -a $LOG_FILE
-    else
-        echo -e "$2 is ... $R FAILURE $N" | tee -a $LOG_FILE
-        exit 1
-    fi
+VALIDATE() {
+  if [ $1 -eq 0 ]; then
+    echo -e "$2 ... $G SUCCESS $N" | tee -a $LOG_FILE
+  else
+    echo -e "$2 ... $R FAILURE $N" | tee -a $LOG_FILE
+    exit 1
+  fi
 }
 
-cp rabbitmq.repo /etc/yum.repos.d/rabbitmq.repo
-VALIDATE $? "Adding rabbitmq repo"
+# Check root access
+if [ $USERID -ne 0 ]; then
+  echo -e "$R ERROR: Run as root $N"
+  exit 1
+fi
 
+# Copy repo file
+if [ -f "$SCRIPT_DIR/rabbitmq.repo" ]; then
+  cp $SCRIPT_DIR/rabbitmq.repo /etc/yum.repos.d/rabbitmq.repo &>>$LOG_FILE
+  VALIDATE $? "Copying rabbitmq.repo"
+else
+  echo -e "$R ERROR: rabbitmq.repo not found in $SCRIPT_DIR $N" | tee -a $LOG_FILE
+  exit 1
+fi
+
+# Install RabbitMQ
 dnf install rabbitmq-server -y &>>$LOG_FILE
-VALIDATE $? "Installing rabbitmq server"
+VALIDATE $? "Installing RabbitMQ"
 
+# Start service
 systemctl enable rabbitmq-server &>>$LOG_FILE
-VALIDATE $? "Enabling rabbitmq server"
-
 systemctl start rabbitmq-server &>>$LOG_FILE
-VALIDATE $? "Starting rabbitmq server"
+VALIDATE $? "Starting RabbitMQ service"
 
-rabbitmqctl add_user roboshop $RABBITMQ_PASSWD &>>$LOG_FILE
+# Wait for service
+sleep 5
+
+# Add application user
+rabbitmqctl list_users | grep -q roboshop
+if [ $? -ne 0 ]; then
+  rabbitmqctl add_user roboshop roboshop123 &>>$LOG_FILE
+  VALIDATE $? "Creating user roboshop"
+else
+  echo "User roboshop already exists, updating password" | tee -a $LOG_FILE
+  rabbitmqctl change_password roboshop roboshop123 &>>$LOG_FILE
+  VALIDATE $? "Updating user password"
+fi
+
 rabbitmqctl set_permissions -p / roboshop ".*" ".*" ".*" &>>$LOG_FILE
+VALIDATE $? "Setting permissions for roboshop user"
 
-END_TIME=$(date +%s)
-TOTAL_TIME=$(( $END_TIME - $START_TIME ))
-
-echo -e "Script exection completed successfully, $Y time taken: $TOTAL_TIME seconds $N" | tee -a $LOG_FILE
+echo -e "$G RabbitMQ setup completed successfully $N"
